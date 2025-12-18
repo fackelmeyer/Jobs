@@ -443,13 +443,17 @@ public class JobsCommands implements CommandExecutor {
         boolean isMaxLevelReached = jobProg.getLevel() >= (jPlayer == null ? jobProg.getJob().getMaxLevel() : jPlayer.getMaxJobLevelAllowed(jobProg.getJob()));
         String path = "command.stats.output." + (isMaxLevelReached ? "maxLevel" : "Level");
 
+        // Get color-coded prestige string
+        String prestigeStr = jobProg.getPrestigeFormatted();
+
         Title title = Jobs.getTitleManager().getTitle(jobProg.getLevel(), jobProg.getJob().getName());
         String message = Jobs.getLanguage().getMessage(path,
             "%joblevel%", jobProg.getLevelFormatted(),
             jobProg.getJob(),
             "%jobxp%", CurrencyType.EXP.format(jobProg.getExperience()),
             "%jobmaxxp%", jobProg.getMaxExperience(),
-            "%titlename%", title == null ? "Unknown" : title.getName());
+            "%titlename%", title == null ? "Unknown" : title.getName(),
+            "%prestige%", prestigeStr);
         return " " + (isMaxLevelReached ? "" : progressBar ? jobProgressMessage(jobProg.getMaxExperience(), jobProg.getExperience()) : "") + " " + message;
     }
 

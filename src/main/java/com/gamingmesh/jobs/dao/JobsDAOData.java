@@ -31,6 +31,7 @@ public class JobsDAOData {
     private String job;
     private int level;
     private double experience;
+    private int prestige;
 
     /**
      * Constructor class for the DAO side of things.
@@ -39,9 +40,21 @@ public class JobsDAOData {
      * @param experience - the experience of the job
      */
     public JobsDAOData(String job, int level, double experience) {
-	this.job = job;
-	this.level = level;
-	this.experience = experience;
+        this(job, level, experience, 0);
+    }
+
+    /**
+     * Constructor class for the DAO side of things.
+     * @param job - the name of the job
+     * @param level - the level of the job
+     * @param experience - the experience of the job
+     * @param prestige - the prestige level of the job
+     */
+    public JobsDAOData(String job, int level, double experience, int prestige) {
+        this.job = job;
+        this.level = level;
+        this.experience = experience;
+        this.prestige = prestige;
     }
 
     /**
@@ -49,7 +62,7 @@ public class JobsDAOData {
      * @return the job name
      */
     public String getJobName() {
-	return job;
+        return job;
     }
 
     /**
@@ -57,7 +70,7 @@ public class JobsDAOData {
      * @return the level in the job
      */
     public int getLevel() {
-	return level;
+        return level;
     }
 
     /**
@@ -65,6 +78,14 @@ public class JobsDAOData {
      * @return the experience in the job
      */
     public double getExperience() {
-	return experience;
+        return experience;
+    }
+
+    /**
+     * Getter function for the prestige level.
+     * @return the prestige level in the job
+     */
+    public int getPrestige() {
+        return prestige;
     }
 }

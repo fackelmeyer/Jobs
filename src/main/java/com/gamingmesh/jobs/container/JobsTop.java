@@ -27,16 +27,16 @@ public class JobsTop {
 
     public static void updateGlobalTop(JobsPlayer jPlayer) {
         CompletableFuture.runAsync(() -> {
-            int level = 0;
+            int effectiveLevel = 0;
             double experience = 0;
 
             List<JobProgression> progress = jPlayer.getJobProgression();
 
             synchronized (progress) {
                 for (JobProgression prog : progress) {
-                    if (prog.getLevel() == 1 && prog.getExperience() == 0)
+                    if (prog.getLevel() == 1 && prog.getExperience() == 0 && prog.getPrestige() == 0)
                         continue;
-                    level += prog.getLevel();
+                    effectiveLevel += prog.getEffectiveLevel();
                     experience += prog.getExperience();
                 }
             }
@@ -46,18 +46,18 @@ public class JobsTop {
 
                 synchronized (archivedProgress) {
                     for (JobProgression prog : archivedProgress) {
-                        if (prog.getLevel() == 1 && prog.getExperience() == 0)
+                        if (prog.getLevel() == 1 && prog.getExperience() == 0 && prog.getPrestige() == 0)
                             continue;
-                        level += prog.getLevel();
+                        effectiveLevel += prog.getEffectiveLevel();
                         experience += prog.getExperience();
                     }
                 }
             }
 
-            if (level == 0 && experience == 0) {
+            if (effectiveLevel == 0 && experience == 0) {
                 globalTop.remove(jPlayer.getUniqueId());
             } else
-                globalTop.update(jPlayer.getUniqueId(), level, experience);
+                globalTop.update(jPlayer.getUniqueId(), effectiveLevel, experience);
         });
     }
 
@@ -81,6 +81,20 @@ public class JobsTop {
         return globalTop.getStats(uuid);
     }
 
+    /**
+     * Update tops using JobProgression (includes prestige)
+     */
+    public static void updateTops(@NotNull Job job, @NotNull JobsPlayer jPlayer, @NotNull JobProgression prog) {
+        if (jPlayer == null || prog == null)
+            return;
+        job.updateTop(jPlayer.getUniqueId(), prog.getEffectiveLevel(), prog.getExperience());
+        JobsTop.updateGlobalTop(jPlayer);
+    }
+
+    /**
+     * @deprecated Use {@link #updateTops(Job, JobsPlayer, JobProgression)} instead
+     */
+    @Deprecated
     public static void updateTops(@NotNull Job job, @NotNull JobsPlayer jPlayer, int level, double experience) {
         if (jPlayer == null)
             return;

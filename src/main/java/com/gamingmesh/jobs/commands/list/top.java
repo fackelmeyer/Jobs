@@ -55,8 +55,7 @@ public class top implements Cmd {
             if (page < 1)
                 try {
                     page = Integer.parseInt(one);
-                    continue;
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
         }
 
@@ -113,19 +112,25 @@ public class top implements Cmd {
                     continue;
             }
 
+            // Get color-coded prestige string and effective level
+            String prestigeStr = progression.getPrestigeFormatted();
+            int displayLevel = progression.getPrestige() > 0 ? progression.getEffectiveLevel() : progression.getLevel();
+
             if (Jobs.getGCManager().ShowToplistInScoreboard && sender instanceof Player)
                 ls.add(Jobs.getLanguage().getMessage("scoreboard.line",
                     "%number%", pi.getPositionForOutput(i),
                     "%playername%", jPlayer.getName(),
                     "%playerdisplayname%", jPlayer.getDisplayName(),
-                    "%level%", progression.getLevel(),
+                    "%level%", displayLevel,
+                    "%prestige%", prestigeStr,
                     "%exp%", progression.getExperience()));
             else
                 ls.add(Jobs.getLanguage().getMessage("command.top.output.list",
                     "%number%", pi.getPositionForOutput(i),
                     "%playername%", jPlayer.getName(),
                     "%playerdisplayname%", jPlayer.getDisplayName(),
-                    "%level%", progression.getLevel(),
+                    "%level%", displayLevel,
+                    "%prestige%", prestigeStr,
                     "%exp%", progression.getExperience()));
         }
 

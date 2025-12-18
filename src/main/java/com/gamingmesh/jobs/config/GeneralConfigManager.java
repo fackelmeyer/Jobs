@@ -86,14 +86,16 @@ public class GeneralConfigManager {
 
 	public boolean jobsTopIncludesArchivedStats;
 
-	public int jobExpiryTime, BlockProtectionDays, FireworkPower, ShootTime, blockOwnershipRange, globalblocktimer, globalBlockBreakTimer, CowMilkingTimer, InfoUpdateInterval, JobsTopAmount, PlaceholdersPage, ConfirmExpiryTime,
+	public int jobExpiryTime, BlockProtectionDays, FireworkPower, ShootTime, blockOwnershipRange, globalblocktimer, globalBlockBreakTimer, CowMilkingTimer, InfoUpdateInterval, JobsTopAmount, PlaceholdersPage, ConfirmExpiryTime, MaxPrestigeLevel,
 			SegmentCount, BossBarTimer, AutoJobJoinDelay, DBCleaningJobsLvl, DBCleaningUsersDays, levelLossPercentageFromMax, levelLossPercentage, ToplistInScoreboardInterval;
 
 	protected int savePeriod, maxJobs, economyBatchDelay;
 	private int ResetTimeHour, ResetTimeMinute, DailyQuestsSkips, BrowseAmountToShow, JobsGUIRows;
 
 	public double skipQuestCost, MinimumOveralPaymentLimit, minimumOveralExpLimit, MinimumOveralPointsLimit, MonsterDamagePercentage, DynamicPaymentMaxPenalty, DynamicPaymentMaxBonus, TaxesAmount, TreeFellerMultiplier, gigaDrillMultiplier,
-			superBreakerMultiplier;
+			superBreakerMultiplier, PrestigeBonusPerLevel, PrestigePointsBonusPerLevel, PrestigeMoneyReward;
+
+	public boolean PrestigeFirework, PrestigeSound;
 
 	public float maxPaymentCurveFactor;
 
@@ -668,6 +670,33 @@ public class GeneralConfigManager {
 		DynamicPaymentMaxPenalty /= -100D;
 		DynamicPaymentMaxBonus = c.get("Economy.DynamicPayment.MaxBonus", 300.0);
 		DynamicPaymentMaxBonus /= 100D;
+
+		c.addComment("Economy.Prestige.BonusPerLevel",
+				"Prestige system: When a player fills their XP bar at max level, they automatically prestige.",
+				"This resets them to level 1 but grants a permanent income bonus that stacks with each prestige.",
+				"This value is the percentage bonus per prestige level (e.g., 0.02 = 2% bonus per prestige)");
+		PrestigeBonusPerLevel = c.get("Economy.Prestige.BonusPerLevel", 0.02);
+
+		c.addComment("Economy.Prestige.MaxLevel",
+				"Maximum prestige level a player can reach per job (0 = unlimited)");
+		MaxPrestigeLevel = c.get("Economy.Prestige.MaxLevel", 5);
+
+		c.addComment("Economy.Prestige.PointsBonusPerLevel",
+				"Percentage points bonus per prestige level (e.g., 0.10 = 10% bonus per prestige)");
+		PrestigePointsBonusPerLevel = c.get("Economy.Prestige.PointsBonusPerLevel", 0.10);
+
+		c.addComment("Economy.Prestige.MoneyReward",
+				"Money reward when prestiging. Player receives this amount multiplied by their new prestige level.",
+				"Example: 200 means Prestige 1 = 200$, Prestige 3 = 600$, Prestige 5 = 1000$");
+		PrestigeMoneyReward = c.get("Economy.Prestige.MoneyReward", 200.0);
+
+		c.addComment("Economy.Prestige.Firework",
+				"Spawn a firework when a player prestiges");
+		PrestigeFirework = c.get("Economy.Prestige.Firework", true);
+
+		c.addComment("Economy.Prestige.Sound",
+				"Play a level-up sound when a player prestiges");
+		PrestigeSound = c.get("Economy.Prestige.Sound", true);
 
 		c.addComment("Economy.MaxPayment.curve.use",
 				"Enabling this feature will mean players will still earn once they reach cap but " + "will loose a percentage the higher over cap they go. Controlled by a factor. math is ```100/((1/factor*percentOver^2)+1)```");

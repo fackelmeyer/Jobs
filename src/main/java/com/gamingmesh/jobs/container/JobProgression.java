@@ -21,7 +21,17 @@ package com.gamingmesh.jobs.container;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Sound;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.FireworkMeta;
+
 import com.gamingmesh.jobs.Jobs;
+import com.gamingmesh.jobs.economy.PaymentData;
+import com.gamingmesh.jobs.i18n.Language;
 
 import net.Zrips.CMILib.Container.CMINumber;
 import net.Zrips.CMILib.Time.CMITimeManager;
@@ -33,16 +43,22 @@ public class JobProgression {
 	private double lastExperience = 0;
 	private double lastMoney = 0;
 	private int level;
+	private int prestige = 0;
 	private transient int maxExperience = -1;
 	private long leftOn = 0;
 
 	public JobProgression(Job job, JobsPlayer jPlayer, int level, double experience) {
+		this(job, jPlayer, level, experience, 0);
+	}
+
+	public JobProgression(Job job, JobsPlayer jPlayer, int level, double experience, int prestige) {
 		this.job = job;
 		this.jPlayer = jPlayer;
 		this.experience = experience;
 		this.level = level;
+		this.prestige = prestige;
 
-		JobsTop.updateTops(job, jPlayer, level, experience);
+		JobsTop.updateTops(job, jPlayer, this);
 	}
 
 	/**
@@ -198,7 +214,7 @@ public class JobProgression {
 
 	/**
 	 * Performs a level up
-	 * 
+	 *
 	 * @returns if level up was performed
 	 */
 	private boolean checkLevelUp() {
@@ -222,11 +238,62 @@ public class JobProgression {
 			jPlayer.reloadLimits();
 		}
 
-		// At max level
-		if (experience > maxExperience)
-			experience = maxExperience;
+		// Auto-prestige when at max level and XP is full
+		int maxLevel = jPlayer.getMaxJobLevelAllowed(job);
+		if (maxLevel > 0 && level >= maxLevel && experience >= maxExperience) {
+			if (canPrestige()) {
+				int oldPrestige = prestige;
+				double overflowExp = experience - maxExperience;
+				prestige();
+				// Apply overflow experience to new level
+				if (overflowExp > 0) {
+					experience = overflowExp;
+					checkLevelUp(); // Recursively check for level ups with overflow
+				}
+				ret = true;
 
-		JobsTop.updateTops(job, jPlayer, level, experience);
+				// Notify player and give rewards
+				Player player = jPlayer.getPlayer();
+				if (player != null) {
+					double incomeBonus = prestige * Jobs.getGCManager().PrestigeBonusPerLevel * 100;
+					double pointsBonus = prestige * Jobs.getGCManager().PrestigePointsBonusPerLevel * 100;
+
+					// Give money reward
+					double moneyReward = prestige * Jobs.getGCManager().PrestigeMoneyReward;
+					if (moneyReward > 0 && Jobs.getEconomy() != null) {
+						Jobs.getEconomy().getEconomy().depositPlayer(player, moneyReward);
+					}
+
+					// Play sound
+					if (Jobs.getGCManager().PrestigeSound) {
+						player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1.0f, 1.0f);
+					}
+
+					// Spawn firework
+					if (Jobs.getGCManager().PrestigeFirework) {
+						spawnPrestigeFirework(player);
+					}
+
+					// Send message
+					Language.sendMessage(player, "message.prestige.auto",
+						job,
+						"%oldprestige%", oldPrestige,
+						"%newprestige%", prestige,
+						"%incomebonus%", String.format("%.0f", incomeBonus),
+						"%pointsbonus%", String.format("%.0f", pointsBonus),
+						"%moneyreward%", String.format("%.0f", moneyReward));
+				}
+			} else {
+				// At max prestige, cap experience
+				if (experience > maxExperience)
+					experience = maxExperience;
+			}
+		} else if (experience > maxExperience && level >= maxLevel) {
+			// At max level but not enough for prestige, cap experience
+			experience = maxExperience;
+		}
+
+		JobsTop.updateTops(job, jPlayer, this);
 
 		return ret;
 	}
@@ -256,7 +323,7 @@ public class JobProgression {
 			jPlayer.reloadLimits();
 		}
 
-		JobsTop.updateTops(job, jPlayer, level, experience);
+		JobsTop.updateTops(job, jPlayer, this);
 
 		return ret;
 	}
@@ -307,6 +374,154 @@ public class JobProgression {
 
 	public void setLastMoney(double lastMoney) {
 		this.lastMoney = lastMoney;
+	}
+
+	/**
+	 * Get the current prestige level
+	 *
+	 * @return the prestige level
+	 */
+	public int getPrestige() {
+		return prestige;
+	}
+
+	/**
+	 * Set the prestige level
+	 *
+	 * @param prestige the new prestige level
+	 */
+	public void setPrestige(int prestige) {
+		jPlayer.setSaved(false);
+		this.prestige = prestige;
+		JobsTop.updateTops(job, jPlayer, this);
+	}
+
+	/**
+	 * Increment prestige by 1 and reset level to 1
+	 */
+	public void prestige() {
+		jPlayer.setSaved(false);
+		this.prestige++;
+		this.level = 1;
+		this.experience = 0;
+		reloadMaxExperience();
+		JobsTop.updateTops(job, jPlayer, this);
+	}
+
+	/**
+	 * Check if the player can prestige (at max level and not at max prestige)
+	 *
+	 * @return true if can prestige
+	 */
+	public boolean canPrestige() {
+		int maxLevel = jPlayer.getMaxJobLevelAllowed(job);
+		if (maxLevel <= 0 || level < maxLevel)
+			return false;
+
+		int maxPrestige = Jobs.getGCManager().MaxPrestigeLevel;
+		if (maxPrestige > 0 && prestige >= maxPrestige)
+			return false;
+
+		return true;
+	}
+
+	/**
+	 * Check if player is at max prestige level
+	 *
+	 * @return true if at max prestige
+	 */
+	public boolean isMaxPrestige() {
+		int maxPrestige = Jobs.getGCManager().MaxPrestigeLevel;
+		return maxPrestige > 0 && prestige >= maxPrestige;
+	}
+
+	/**
+	 * Get the effective level including prestige for rankings
+	 * Effective level = level + (prestige * maxLevel)
+	 *
+	 * @return the effective level
+	 */
+	public int getEffectiveLevel() {
+		int maxLevel = job.getMaxLevel();
+		if (maxLevel <= 0)
+			maxLevel = 100; // Default fallback
+		return level + (prestige * maxLevel);
+	}
+
+	/**
+	 * Get formatted prestige string with color based on level
+	 * Colors: 1=green, 2=yellow, 3=gold, 4=red, 5=dark_purple
+	 *
+	 * @return formatted prestige string or empty if no prestige
+	 */
+	public String getPrestigeFormatted() {
+		if (prestige <= 0)
+			return "";
+
+		String color;
+		switch (prestige) {
+			case 1:
+				color = "&a"; // Green
+				break;
+			case 2:
+				color = "&e"; // Yellow
+				break;
+			case 3:
+				color = "&6"; // Gold
+				break;
+			case 4:
+				color = "&c"; // Red
+				break;
+			case 5:
+			default:
+				color = "&5"; // Dark Purple (max)
+				break;
+		}
+
+		return " " + color + "[Prestige " + prestige + "]";
+	}
+
+	/**
+	 * Spawns a firework at the player's location to celebrate prestige
+	 *
+	 * @param player the player to spawn firework for
+	 */
+	private void spawnPrestigeFirework(Player player) {
+		Firework firework = (Firework) player.getWorld().spawnEntity(player.getLocation(), EntityType.FIREWORK_ROCKET);
+		FireworkMeta meta = firework.getFireworkMeta();
+
+		// Color based on prestige level
+		Color color;
+		switch (prestige) {
+			case 1:
+				color = Color.LIME;
+				break;
+			case 2:
+				color = Color.YELLOW;
+				break;
+			case 3:
+				color = Color.ORANGE;
+				break;
+			case 4:
+				color = Color.RED;
+				break;
+			case 5:
+			default:
+				color = Color.PURPLE;
+				break;
+		}
+
+		FireworkEffect effect = FireworkEffect.builder()
+			.withColor(color)
+			.withFade(Color.WHITE)
+			.with(FireworkEffect.Type.BALL_LARGE)
+			.trail(true)
+			.flicker(true)
+			.build();
+
+		meta.addEffect(effect);
+		meta.setPower(1);
+		firework.setFireworkMeta(meta);
 	}
 
 }

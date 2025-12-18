@@ -238,8 +238,9 @@ public class LanguageManager {
             c.get("command.stats.help.args", "[playername]");
             cmdArgs.put("stats", Arrays.asList("[playername]"));
             c.get("command.stats.error.nojob", "Please join a job first.");
-            c.get("command.stats.output.Level", "&7Level &f%joblevel% &7for &f%jobname%&7: &f%jobxp%&7/&f%jobmaxxp%&7xp");
-            c.get("command.stats.output.maxLevel", "    &2Max    &7Level &f%joblevel% &7for &f%jobname%");
+            c.get("command.stats.output.Level", "&7Level &f%joblevel% &7for &f%jobname%&7: &f%jobxp%&7/&f%jobmaxxp%&7xp%prestige%");
+            c.get("command.stats.output.maxLevel", "    &2Max    &7Level &f%joblevel% &7for &f%jobname%%prestige%");
+            c.get("command.stats.output.prestige", " &6[P%prestigelevel%]");
             c.get("command.stats.bossBarOutput", "Lvl %joblevel% %jobname%: %jobxp%/%jobmaxxp% xp%gain% $%money%");
             c.get("command.stats.bossBarGain", " &7(&f%gain%&7)");
             c.get("command.stats.barEmpty", "&7\u258F");
@@ -343,6 +344,7 @@ public class LanguageManager {
             c.get("command.leaveall.success", "You have left all your jobs.");
             c.get("command.leaveall.confirmationNeed", "&cAre you sure you want to leave from all jobs? Type the command again within&6 [time] seconds &cto confirm!");
 
+
             c.get("command.explored.help.info", "Check who visited this chunk");
             c.get("command.explored.error.noexplore", "No one visited this chunk");
             c.get("command.explored.fullExplore", "&aThis chunk is fully explored");
@@ -429,7 +431,8 @@ public class LanguageManager {
             cmdArgs.put("top", Arrays.asList("[jobname]"));
             c.get("command.top.error.nojob", "Can't find any job with this name.");
             c.get("command.top.output.topline", "&aTop&e %amount% &aplayers by &e%jobname% &ajob");
-            c.get("command.top.output.list", "&e%number%&a. &e%playerdisplayname% &alvl &e%level% &awith&e %exp% &aexp");
+            c.get("command.top.output.list", "&e%number%&a. &e%playerdisplayname% &alvl &e%level%%prestige% &awith&e %exp% &aexp");
+            c.get("command.top.output.prestige", " &6[P%prestigelevel%]");
 
             c.get("command.gtop.help.info", "Shows top players by global jobs level.");
             c.get("command.gtop.help.args", "clear/pageNumber");
@@ -440,6 +443,14 @@ public class LanguageManager {
             c.get("command.gqtop.help.args", "clear/pageNumber");
             c.get("command.gqtop.output.topline", "&aTop&e %amount% &aplayers by done quests");
             c.get("command.gqtop.output.list", "&e%number%&a. &e%playerdisplayname% &alvl &e%level% &awith&e %exp% &aexp");
+
+            c.get("command.ptop.help.info", "Shows top players by prestige level.");
+            c.get("command.ptop.help.args", "[jobname] pageNumber");
+            Jobs.getGCManager().getCommandArgs().put("ptop", Arrays.asList("[jobname]"));
+            c.get("command.ptop.error.nojob", "Can't find any job with this name.");
+            c.get("command.ptop.error.noprestige", "&cNo players with prestige found for this job.");
+            c.get("command.ptop.output.topline", "&6*** &eTop&6 %amount% &ePrestige players for &6%jobname% &6***");
+            c.get("command.ptop.output.list", "&e%number%&a. &e%playerdisplayname%%prestigeformatted% &7(Lvl &f%level%&7)");
 
             c.get("command.area.help.info", "Modify restricted areas.");
             c.get("command.area.help.args", "add/remove/info/list");
@@ -574,6 +585,9 @@ public class LanguageManager {
             c.get("command.version.output.CMILib", "&eCMILib: &6[version] ");
             c.get("command.version.output.cmilVersionNew", "&e-> [newVersion]");
 
+            c.get("message.prestige.auto", "&6&l*** PRESTIGE UP! *** &2You have prestiged &7[jobname]&2! Prestige: &6%oldprestige% &2-> &6%newprestige%&2. Reward: &a%moneyreward%$ &7| &2Income: &a+%incomebonus%% &7| &6Points: &e+%pointsbonus%%");
+
+
             c.get("signs.List", "&0[number].&8[player]&7:&4[level]");
             c.get("signs.questList", "&0[number].&8[player]&7:&4[quests]");
             c.get("signs.SpecialList.p1", "&b** &8First &b**");
@@ -606,6 +620,7 @@ public class LanguageManager {
             // top clear");
             c.get("scoreboard.topline", "&2Top &e%jobname%");
             c.get("scoreboard.gtopline", "&2Global top list");
+            c.get("scoreboard.ptopline", "&6Prestige &e%jobname%");
             c.get("scoreboard.line", "&2%number%. &e%playerdisplayname% &e(&6%level%&e)");
 
             // Going with ENUM's for simpler tracking of locale lines

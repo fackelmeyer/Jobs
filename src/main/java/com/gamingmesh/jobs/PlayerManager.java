@@ -462,7 +462,7 @@ public class PlayerManager {
                         continue;
                     }
 
-                    jPlayer.progression.add(new JobProgression(job, jPlayer, jobdata.getLevel(), jobdata.getExperience()));
+                    jPlayer.progression.add(new JobProgression(job, jPlayer, jobdata.getLevel(), jobdata.getExperience(), jobdata.getPrestige()));
                 }
             }
             jPlayer.reloadMaxExperience();
@@ -1175,7 +1175,7 @@ public class PlayerManager {
     }
 
     public enum BoostOf {
-        McMMO, PetPay, NearSpawner, Permission, Global, Dynamic, Item, Area
+        McMMO, PetPay, NearSpawner, Permission, Global, Dynamic, Item, Area, Prestige
     }
 
     public Boost getFinalBonus(JobsPlayer player, Job job, boolean force, boolean getall) {
@@ -1254,6 +1254,18 @@ public class PlayerManager {
 
         if (!Jobs.getRestrictedAreaManager().getRestrictedAreas().isEmpty())
             boost.add(BoostOf.Area, Jobs.getRestrictedAreaManager().getRestrictedMultipliers(player.getJobProgression(job), pl));
+
+        // Add prestige bonus (income and points separately)
+        JobProgression progression = player.getJobProgression(job);
+        if (progression != null && progression.getPrestige() > 0) {
+            double incomeBonus = progression.getPrestige() * Jobs.getGCManager().PrestigeBonusPerLevel;
+            double pointsBonus = progression.getPrestige() * Jobs.getGCManager().PrestigePointsBonusPerLevel;
+            BoostMultiplier prestigeMultiplier = new BoostMultiplier();
+            prestigeMultiplier.add(CurrencyType.MONEY, incomeBonus);
+            prestigeMultiplier.add(CurrencyType.POINTS, pointsBonus);
+            prestigeMultiplier.add(CurrencyType.EXP, incomeBonus); // XP gets same bonus as income
+            boost.add(BoostOf.Prestige, prestigeMultiplier);
+        }
 
         return boost;
     }
