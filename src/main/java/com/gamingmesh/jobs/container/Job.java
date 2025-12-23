@@ -873,4 +873,23 @@ public class Job {
     public topStats getTopStats(UUID uuid) {
         return topList.getStats(uuid);
     }
+
+    /**
+     * Sets the top list for this job. Used during reload to preserve cache.
+     *
+     * @param topList the top list to set
+     */
+    public void setTopList(JobsTop topList) {
+        if (topList != null)
+            this.topList = topList;
+    }
+
+    /**
+     * Gets the top list for this job.
+     *
+     * @return the jobs top list
+     */
+    public JobsTop getJobsTop() {
+        return topList;
+    }
 }

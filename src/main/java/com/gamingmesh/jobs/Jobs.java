@@ -505,11 +505,21 @@ public final class Jobs extends JavaPlugin {
 
     /**
      * Sets the list of jobs
-     * 
+     *
      * @param jobs - list of jobs
      */
-    public static void setJobs(List<Job> jobs) {
-        Jobs.jobs = jobs;
+    public static void setJobs(List<Job> newJobs) {
+        // Preserve top list cache from old jobs
+        if (Jobs.jobs != null) {
+            for (Job newJob : newJobs) {
+                Job oldJob = getJob(newJob.getName());
+                if (oldJob != null) {
+                    newJob.setTopList(oldJob.getJobsTop());
+                }
+            }
+        }
+
+        Jobs.jobs = newJobs;
 
         jobsByName.clear();
 
